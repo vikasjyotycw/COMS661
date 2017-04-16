@@ -16,15 +16,14 @@ public class Storage{
 	public final double upperLim = 2.0;
 	public int m;
 	public long nxtPtr;
-	public long pos;
 	private int bitMapSize;
 	public int numPages;
-	
+
 	private int numAllocated;
 	private int numDeallocated;
 	private int numRead;
 	private int numWritten;
-	
+
 	public void CreateStorage(String fileName,int pageSize, int fileSize, int tupleSize) throws Exception{
 		this.M = 3;
 		this.N = 0;
@@ -34,42 +33,43 @@ public class Storage{
 		this.pageSize=pageSize;
 		this.tupleSize = tupleSize;
 		this.numPages=(int) (this.fileSize/this.pageSize);
-		
+
 		this.bitMapSize =(int) Math.ceil(this.numPages/8.0);
 
 		if(this.bitMapSize%16!=0){
 			this.bitMapSize = (this.bitMapSize/16+1)*16;
 		}
-		//Allocating 16 extra bytes in the beginning for storage of parameters such as pagesize.
-		this.bitMapSize=this.bitMapSize+16;
+		//Allocating 24 extra bytes in the beginning for storage of parameters such as pagesize.
+		this.bitMapSize=this.bitMapSize+24;
 		this.file= new RandomAccessFile(this.fileName, "rw");
 		
+		//System.out.println(this.pageSize+" "+this.numPages+" "+this.tupleSize+" "+this.M+" "+this.N+" "+this.Sp);
 		file.seek(0);
 		//Write the pagesize to the first 4 bytes in the file.
-		file.writeInt(pageSize);
-		
+		file.writeInt(this.pageSize);
+
 		//Write number of pages to the next 4 bytes in the file
 		file.seek(4);
 		file.writeInt(this.numPages);
-		
+
 		//Write tuple size to the next 4 bytes in the file
 		file.seek(8);
 		file.writeInt(this.tupleSize);
-		
+
 		//Write M to the next 4 bytes in the file
 		file.seek(12);
 		file.writeInt(this.M);
-		
+
 		//Write N to the next 4 bytes in the file
 		file.seek(16);
 		file.writeInt(this.N);
-		
+
 		//Write Sp to the next 4 bytes in the file
 		file.seek(20);
 		file.writeInt(this.Sp);
-		
+
 		file.seek(0);
-		
+
 		this.fileSize=this.fileSize+this.bitMapSize;
 		file.setLength(fileSize);
 		file.seek(16);
@@ -82,7 +82,7 @@ public class Storage{
 		for(int i=this.bitMapSize;i<this.fileSize;i++){
 			file.write((byte) 0);
 		}
-		
+
 		for(int i=0; i<M; i++){
 			long startPos = this.bitMapSize+i*this.pageSize;
 			file.seek(startPos);
@@ -92,64 +92,64 @@ public class Storage{
 			file.seek(startPos+8);
 			file.write(0);
 		}
-		
+
 	}
-	
+
 	public void LoadStorage(String fileName) throws Exception{
 		this.file= new RandomAccessFile(fileName, "rw");
-		
+
 		this.fileSize=file.length();
-		
+
 		//Read bytes 4 to 7 which we used to store the number of pages
 		file.seek(4);
 		this.numPages= file.readInt();
 		this.fileName=fileName;
-		
+
 		//Read the first 4 bytes of the file which we used to store the page size while creating the storage.
 		file.seek(0);
 		this.pageSize = file.readInt();
-		
-		
+
+
 		this.bitMapSize =(int) Math.ceil(this.numPages/8.0);
 
 		if(this.bitMapSize%16!=0){
 			this.bitMapSize = (this.bitMapSize/16+1)*16;
 		}
 		this.bitMapSize=this.bitMapSize+16;
-		
-		
+
+
 		this.numAllocated=0;
 		this.numDeallocated=0;
 		this.numRead=0;
 		this.numWritten=0;
 	}
-	
+
 	public void UnloadStorage() {
 		this.file=null;
 	}
-	
-	
+
+
 	public void ReadPage(long n, byte [] buffer) throws Exception{
 		//Go to the offset.
 		long offset= n*this.pageSize+this.bitMapSize;
 		file.seek(offset);
-		
+
 		//read the page in buffer.
 		file.read(buffer);
 		this.numRead++;
 	}
-	
-	
+
+
 	public void WritePage(long n, byte[] buffer) throws Exception{
 		//Go to the required offset
 		long offset= n*this.pageSize+this.bitMapSize;
 		file.seek(offset);
-		
+
 		//Write the buffer to the file.
 		file.write(buffer);
 		this.numWritten++;
 	}
-	
+
 	//This function changes a bit in a byte and returns the int value of the new byte.
 	private int WriteBitInAByte(int offset, int byteRead, int bitToBeWritten){
 		String binaryString= String.format("%8s", Integer.toBinaryString(byteRead & 0xFF)).replace(' ', '0');
@@ -157,8 +157,8 @@ public class Storage{
 		int byteWrite= Integer.parseInt(binaryString,2);
 		return byteWrite;
 	}
-	
-	
+
+
 	public long AllocatePage() throws Exception{
 		file.seek(16);
 		//We use bits to keep track of allocated pages. The RandomAccessFile supports only byte operations.
@@ -170,7 +170,7 @@ public class Storage{
 			//If the byte which is read has all 1's, then all the pages are allocated. Don't look in that byte.
 			if(byteread<255){
 				file.seek(i);
-				
+
 				//Convert the byte into a binary string.
 				String binaryString= String.format("%8s", Integer.toBinaryString(byteread & 0xFF)).replace(' ', '0');
 				//Look in the string to find the first 0 bit and set it to 1. Return that page number
@@ -179,7 +179,7 @@ public class Storage{
 						binaryString=binaryString.substring(0,j)+"1"+binaryString.substring(j+1);
 						file.write(Integer.parseInt(binaryString,2));
 						numAllocated++;
-						
+
 						//Return the page number only if the number of pages is more than the page we are returning.
 						if((i-16)*8+j<this.numPages)
 							return ((i-16)*8+j);
@@ -188,7 +188,7 @@ public class Storage{
 							System.out.println("Error in allocating a page");
 							return -1;
 						}
-						
+
 					}
 				}
 			}
@@ -196,8 +196,8 @@ public class Storage{
 		System.out.println("Error in allocating a page");
 		return -1;
 	}
-	
-	
+
+
 	//To deallocate a page n, we pick up the n/8th byte from the RandomAccessFile and then change the corresponding bit in that byte to 0.
 	public void DeAllocatePage(long n) throws Exception{
 		file.seek(n/8);
@@ -207,7 +207,7 @@ public class Storage{
 		file.write(byteToBeWritten);
 		numDeallocated++;
 	}
-	
+
 	public void printStats(){
 		System.out.println("Number of pages Read:"+numRead + " "+ "; Written:"+numWritten+" "+"; Allocated: "+numAllocated+" "+"; Deallocated: "+numDeallocated);
 	}
@@ -262,14 +262,6 @@ public class Storage{
 		this.nxtPtr = nxtPtr;
 	}
 
-	public long getPos() {
-		return pos;
-	}
-
-	public void setPos(long pos) {
-		this.pos = pos;
-	}
-
 	public int getNumPages() {
 		return numPages;
 	}
@@ -317,11 +309,79 @@ public class Storage{
 	public double getUpperLim() {
 		return upperLim;
 	}
-	
+
 	public void writeValue(int m, byte[] buffer) throws IOException{
 		//byte[] buffer = ByteBuffer.allocate(4).putInt(m).array();
-		long offset= m*this.pageSize+this.bitMapSize+12;
-		file.seek(pos);
+		long offset= m*this.pageSize+this.bitMapSize+8;
+		file.seek(offset);
+		int tuplesInBucket = file.read();
+		file.seek(offset+4+tuplesInBucket*tupleSize);
 		file.write(buffer);
+		file.seek(offset);
+		file.write(++tuplesInBucket);
+	}
+
+	public void printHeader(){
+		try{
+			file.seek(0);
+			//Write the pagesize to the first 4 bytes in the file.
+			System.out.println("pagesize "+file.readInt());
+
+			//Write number of pages to the next 4 bytes in the file
+			file.seek(4);
+			System.out.println("number of pages "+file.readInt());
+
+			//Write tuple size to the next 4 bytes in the file
+			file.seek(8);
+			System.out.println("tuple size "+file.readInt());
+
+			//Write M to the next 4 bytes in the file
+			file.seek(12);
+			System.out.println("M "+file.readInt());
+
+			//Write N to the next 4 bytes in the file
+			file.seek(16);
+			System.out.println("N "+file.readInt());
+
+			//Write Sp to the next 4 bytes in the file
+			file.seek(20);
+			System.out.println("Sp "+file.readInt());
+		}catch(Exception e){
+			e.printStackTrace();
+		}
+	}
+
+	public void printValInLoc(){
+		try{
+			//40 -> bucket1 num -> 0
+			//44 -> nxtptr -> 0
+			//48 -> tuplesInBucket -> 1
+			file.seek(40);
+			System.out.println("Bucket#0: "+file.read());
+			file.seek(44);
+			System.out.println("nxtPtr#0: "+file.read());
+			file.seek(48);
+			System.out.println("tuplesInBucket#0: "+file.read());
+			//40 -> bucket2 num -> 1
+			//44 -> nxtptr -> 0
+			//48 -> tuplesInBucket -> 1
+			file.seek(104);
+			System.out.println("Bucket#1: "+file.read());
+			file.seek(108);
+			System.out.println("nxtPtr#1: "+file.read());
+			file.seek(112);
+			System.out.println("tuplesInBucket#1: "+file.read());
+			//40 -> bucket3 num -> 2
+			//44 -> nxtptr -> 0
+			//48 -> tuplesInBucket -> 1
+			file.seek(168);
+			System.out.println("Bucket#2: "+file.read());
+			file.seek(172);
+			System.out.println("nxtPtr#2: "+file.read());
+			file.seek(176);
+			System.out.println("tuplesInBucket#2: "+file.read());
+		} catch (Exception e){
+			e.printStackTrace();
+		}
 	}
 }
