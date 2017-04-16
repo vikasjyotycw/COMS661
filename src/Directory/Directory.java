@@ -3,7 +3,7 @@ package Directory;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
-public class SimpleHashStorage {
+public class Directory {
 	private static String fileName;
 	private static long fileSize;
 	public static RandomAccessFile file;
