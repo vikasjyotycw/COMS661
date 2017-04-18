@@ -11,7 +11,7 @@ public class Directory {
 	private static int headerSize = 16;
 	private static int tupleSize = 4;
 	private static int writeableAreaSize;
-	//private int freeSize = 32;
+
 
 
 	private static int bitMapSize;
@@ -45,7 +45,7 @@ public class Directory {
 	}
 
 	public static void LoadStorage(String fileName) throws Exception{
-		file= new RandomAccessFile(fileName, "rw");
+		file= new RandomAccessFile(fileName,"rw");
 		fileSize=file.length();
 		//Read bytes 4 to 7 which we used to store the number of pages
 		
@@ -78,24 +78,11 @@ public class Directory {
 	}
 	
 	public static void main(String[] args){
-		//int[] inputValues = {3,12,45,33,6,89,4,97,118,9,14};
+
 		int[] inputValues = {3,11,4,55,32};
 		try {
 			CreateStorage("HashStorage",1024,1024);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		try {
 			LoadStorage("HashStorage");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		try {
-			/*
-			WritePage(6,getHashValue(6));
-			System.out.println(ReadPage(1));
-			System.out.println(readHeader());
-			*/
 			for(int i=0; i<inputValues.length; i++){
 				WritePage(inputValues[i],getHashValue(inputValues[i]));
 			}
@@ -116,17 +103,3 @@ public class Directory {
 	}
 }
 
-/*
- 2
-4
-1
-2
-4
-3
-3
-4
-2
-3
-3
- 
- */
