@@ -415,6 +415,8 @@ public class Storage{
 						writeValueInSplit(newChainNum, buffer, internalCallFlg);
 				}
 			}
+			file.seek(startOfPage+16);
+			file.writeInt(2*M);
 			if(flg==0){
 				file.seek(startOfPage+4);
 				startOfPage = file.readInt();
@@ -554,6 +556,28 @@ public class Storage{
 		}
 		System.out.println("Address of chain "+m+" as computed by the method is "+chainAddress);
 		return chainAddress;
+	}
+	
+	public byte[] searchValue(int val) throws IOException{
+		byte[] buffer = new byte[this.pageSize];
+		int pageAccessCount = 0;
+		int m = val%this.M;
+		int chainAddress = getChainAddress(m);
+		file.seek(chainAddress+16);
+		int hashedWith = file.readInt();
+		pageAccessCount++;
+		if(this.M==hashedWith){
+			file.seek(chainAddress);
+			file.read(buffer);
+			System.out.println("Number of pages accessed - "+pageAccessCount);
+			return buffer;
+		}
+		m = val%hashedWith;
+		chainAddress = getChainAddress(m);
+		file.seek(chainAddress);
+		file.read(buffer);
+		pageAccessCount++;
+		return buffer;
 	}
 	
 	public int getPageSize() {
