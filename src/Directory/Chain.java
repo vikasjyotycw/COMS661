@@ -1,34 +1,41 @@
 package Directory;
 
+import Demo.GetTupleFromRelationIterator;
+import Tuple.*;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class Chain {
 	private static Storage storage;
-	
-	public static void main(String[] args){
-		//int inputArr[] = {208, 123, 318, 526, 232, 215, 400, 412, 285, 345};
-		//int[] inputArr = {6, 16, 14, 10, 4, 22, 28, 37, 40, 61, 64, 19, 13, 7, 25, 31, 34, 67, 91, 94, 97, 100, 103, 106, 109, 112, 115, 118, 121, 124, 127};
-		//2, 3, 0, 1, 4
-		//int[] inputArr = {208, 123, 318, 526, 232, 215, 400, 412, 285, 345};
-		int[] inputArr = {208, 123, 318, 526, 232, 215, 400, 412};
-		storage = new Storage();
-		try {
-			//storage.CreateStorage("HashStorage", 64, 8192, 4);
-			storage.CreateStorage("HashStorage", 32, 8192, 4);
-			//storage.printHeader();
-			for(int i=0; i<inputArr.length; i++){
-				byte[] buffer = ByteBuffer.allocate(4).putInt(inputArr[i]).array();
-				storage.writeValue(getHash(inputArr[i]), buffer);
+	public static void main(String args[]) throws Exception{
+
+		Tuple t = new Tuple();
+		GetTupleFromRelationIterator getTupleFromRelationIterator= new GetTupleFromRelationIterator("myDisk1", 35, 0);
+		getTupleFromRelationIterator.open();
+		while(getTupleFromRelationIterator.hasNext()){
+			byte [] tuple = getTupleFromRelationIterator.next();
+			byte [] keyPart = t.generateKey(tuple);
+			System.out.println(toInt(keyPart,0));
+			List<Integer> inputArr = new ArrayList<Integer>();
+			inputArr.add(toInt(keyPart,0));
+			storage = new Storage();
+			try {
+				storage.CreateStorage("HashStorage", 32, 8192, 4);
+				for(int i=0; i<inputArr.size(); i++){
+					byte[] buffer = ByteBuffer.allocate(4).putInt(inputArr.get(i)).array();
+					storage.writeValue(getHash(inputArr.get(i)), buffer);
+				}
+				storage.printHeader();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			storage.printHeader();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
-	
+
 	public static int getHash(int num) throws IOException{
 		int M = storage.getM();
 		int m = num%M;
@@ -39,5 +46,12 @@ public class Chain {
 		}
 		return m;
 	}
-	
+	private static int toInt(byte[] bytes, int offset) {
+		int ret = 0;
+		for (int i=0; i<4; i++) {
+			ret <<= 8;
+			ret |= (int)bytes[offset+i] & 0xFF;
+		}
+		return ret;
+	}
 }
