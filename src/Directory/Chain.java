@@ -1,5 +1,8 @@
+package Directory;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
 
 public class Chain {
 	private static Storage storage;

@@ -16,6 +16,8 @@ public class Tuple {
 	private int length;
 	private int keyLength;
 	private int[] keyBytes;
+	public List<TupleAttribute> tupleAttr;
+
 	
 	/**
 	 * In this constructor, we define that length is given by len
@@ -54,7 +56,7 @@ public class Tuple {
 			
 			NodeList list = document.getElementsByTagName("Attribute");
 			
-			List<TupleAttribute> res = new ArrayList<TupleAttribute>();
+			tupleAttr = new ArrayList<TupleAttribute>();
 			
 			for(int ii = 0; ii < list.getLength(); ii++){
 				TupleAttribute attribute = new TupleAttribute();
@@ -65,20 +67,20 @@ public class Tuple {
 				attribute.setLength(Integer.parseInt(element.getAttribute("length")));
 				attribute.setKeyOrder(Integer.parseInt(element.getAttribute("keyorder")));
 				
-				res.add(attribute);
+				tupleAttr.add(attribute);
 			}
 
-			int[] eachKeyOffsets = new int[res.size()];
-			int[] eachKeyLengths = new int[res.size()];
-			int[] eachKeySequences = new int[res.size()];
+			int[] eachKeyOffsets = new int[tupleAttr.size()];
+			int[] eachKeyLengths = new int[tupleAttr.size()];
+			int[] eachKeySequences = new int[tupleAttr.size()];
 			for(int ii = 0; ii < eachKeySequences.length; ii++){
 				eachKeySequences[ii] = -1;
 			}
 			
 			int tmpKeyOffset = 0;
-			for(int ii = 0; ii < res.size(); ii++){
-				int eachKeyLength = res.get(ii).getLength();
-				int keyOrder = res.get(ii).getKeyOrder();
+			for(int ii = 0; ii < tupleAttr.size(); ii++){
+				int eachKeyLength = tupleAttr.get(ii).getLength();
+				int keyOrder = tupleAttr.get(ii).getKeyOrder();
 				
 				eachKeyOffsets[ii] = tmpKeyOffset;
 				eachKeyLengths[ii] = eachKeyLength;
@@ -93,7 +95,7 @@ public class Tuple {
 			this.keyBytes = new int[this.length];
 			
 			int ii = 0;
-			for(int jj = 0; jj < res.size(); jj++){
+			for(int jj = 0; jj < tupleAttr.size(); jj++){
 				if(eachKeySequences[jj] == -1){
 					break;
 				}
