@@ -1,5 +1,7 @@
 package Directory;
 
+import Tuple.Tuple;
+
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -258,6 +260,8 @@ public class Storage{
 			System.out.println(currPtr+","+nextPtr);
 		}
 		//If the page does not have space, allocate a new page
+		file.seek(256);
+		System.out.println("valueat256"+file.readInt());
 		file.seek(currPtr+8);
 		int tuplesInPage = file.readInt();
 		System.out.println("There are "+tuplesInPage+" tuples in this page. Max tuples allowed here is "+maxTuplesInPage);
@@ -380,11 +384,17 @@ public class Storage{
 			System.out.println("Splitting chain - now at page starting at "+startOfPage);
 			file.seek(startOfPage+8);
 			int tuplesInPage = file.readInt();
+			System.out.println(tuplesInPage);
 			if(tuplesInPage==0) break;
 			for(int i=0; i<tuplesInPage; i++){
+				Tuple t = new Tuple();
 				int posOfTuple = startOfPage+24+i*tupleSize;
 				file.seek(posOfTuple);
-				int newChainNum = file.readInt()%(2*M);
+				byte[] tuple = new byte[this.tupleSize];
+				file.read(tuple);
+				byte[] keyPart = t.generateKey(tuple);
+				int newChainNum = keyPart.hashCode()%(2*M);
+				//int newChainNum = file.readInt()%(2*M);
 				file.seek(startOfPage);
 				int currChainNum = file.readInt();
 				if(newChainNum==currChainNum){

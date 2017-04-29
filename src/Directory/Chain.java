@@ -2,6 +2,8 @@ package Directory;
 
 import Demo.GetTupleFromRelationIterator;
 import Tuple.*;
+import com.sun.org.apache.xpath.internal.SourceTree;
+import Demo.*;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -15,25 +17,31 @@ public class Chain {
 		Tuple t = new Tuple();
 		GetTupleFromRelationIterator getTupleFromRelationIterator= new GetTupleFromRelationIterator("myDisk1", 35, 0);
 		getTupleFromRelationIterator.open();
-		while(getTupleFromRelationIterator.hasNext()){
-			byte [] tuple = getTupleFromRelationIterator.next();
-			byte [] keyPart = t.generateKey(tuple);
-			System.out.println(toInt(keyPart,0));
-			List<Integer> inputArr = new ArrayList<Integer>();
-			inputArr.add(toInt(keyPart,0));
-			storage = new Storage();
+		storage = new Storage();
+		storage.CreateStorage("HashStorage", 94, 24064, 35);
+		while(getTupleFromRelationIterator.hasNext()) {
+			byte[] tuple = getTupleFromRelationIterator.next();
+			byte[] keyPart = t.generateKey(tuple);
+			//System.out.println(toInt(keyPart,0));
+			//List<Integer> inputArr = new ArrayList<Integer>();
+			//inputArr.add(keyPart.hashCode());
+			int keyPartValue = keyPart.hashCode();
+			System.out.println(keyPartValue);
+
 			try {
-				storage.CreateStorage("HashStorage", 32, 8192, 4);
-				for(int i=0; i<inputArr.size(); i++){
-					byte[] buffer = ByteBuffer.allocate(4).putInt(inputArr.get(i)).array();
-					storage.writeValue(getHash(inputArr.get(i)), buffer);
-				}
+				//for(int i=0; i<inputArr.size(); i++){
+				byte[] buffer = ByteBuffer.allocate(35).put(tuple).array();
+				System.out.println("Inserting "+getHash(keyPartValue));
+				storage.writeValue(getHash(keyPartValue), buffer);
+				//}
 				storage.printHeader();
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
+
+
 	}
 
 	public static int getHash(int num) throws IOException{
